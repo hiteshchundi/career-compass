@@ -8,7 +8,7 @@ from openai import OpenAI
 load_dotenv()
 
 
-class OllamaService:
+class LLMService:
     def __init__(self):
         self.client = OpenAI(
             api_key=os.getenv("GROQ_API_KEY"),
