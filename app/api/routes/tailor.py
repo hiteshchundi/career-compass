@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from app.ingestion.docx import extract_text as extract_docx_text
 from app.ingestion.pdf import extract_text as extract_pdf_text
 
-from app.ai.ollama_service import OllamaService
+from app.ai.llm_service import OllamaService
 from app.ai.docx_generator import ResumeGenerator
 
 router = APIRouter(
