@@ -11,7 +11,7 @@ from app.resume_analysis.parser import ResumeParser
 from app.job_analysis.parser import JobParser
 from app.matching.engine import MatchingEngine
 
-from app.ai.ollama_service import OllamaService
+from app.ai.llm_service import LLMService
 
 router = APIRouter(
     prefix="/analyze",
@@ -76,7 +76,7 @@ async def analyze(
         # AI Enhancement
         # --------------------------------------------------
         try:
-            ai_result = OllamaService().analyze(
+            ai_result = LLMService().analyze(
                 resume_text=resume_text,
                 job_description=job_description,
                 baseline_result=baseline_result,
@@ -85,7 +85,7 @@ async def analyze(
             return ai_result
 
         except Exception as e:
-            print("\n========== OLLAMA FAILED ==========")
+            print("\n========== LLM FAILED ==========")
             print(e)
             print("===================================\n")
 

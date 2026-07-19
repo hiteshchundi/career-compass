@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from app.ingestion.docx import extract_text as extract_docx_text
 from app.ingestion.pdf import extract_text as extract_pdf_text
 
-from app.ai.llm_service import OllamaService
+from app.ai.llm_service import LLMService
 from app.ai.docx_generator import ResumeGenerator
 
 router = APIRouter(
@@ -55,7 +55,7 @@ async def tailor_resume(
         # ----------------------------
         # Generate AI Tailored Resume
         # ----------------------------
-        tailored_resume = OllamaService().tailor_resume(
+        tailored_resume = LLMService().tailor_resume(
             resume_text=resume_text,
             job_description=job_description,
         )
