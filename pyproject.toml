@@ -3,6 +3,7 @@ name = "career-compass"
 version = "0.1.0"
 description = "AI-powered career assistant"
 requires-python = ">=3.14"
+
 dependencies = [
     "fastapi",
     "uvicorn",
@@ -10,10 +11,12 @@ dependencies = [
     "alembic",
     "psycopg[binary]",
     "pydantic",
+    "pydantic-settings",
     "python-multipart",
     "python-dotenv",
     "pypdf",
     "python-docx",
+    "openai>=1.40.0",
 ]
 
 [dependency-groups]
@@ -24,8 +27,3 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-
-dependencies = [
-    ...
-    "openai>=1.40.0",
-]
