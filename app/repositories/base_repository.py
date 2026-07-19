@@ -7,7 +7,7 @@ ModelType = TypeVar("ModelType")
 
 class BaseRepository(Generic[ModelType]):
     """
-    Base repository providing access to the database session.
+    Base repository that provides access to the database session.
     """
 
     def __init__(self, db: Session):
