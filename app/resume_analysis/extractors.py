@@ -1,3 +1,7 @@
+import re
+
+from app.resume_analysis.skills import COMMON_SKILLS
+
 from app.schemas.resume_analysis import (
     ContactInfo,
 )
@@ -29,7 +33,17 @@ def extract_contact(text: str) -> ContactInfo:
 
 
 def extract_skills(text: str) -> list[str]:
-    return []
+    text = text.lower()
+
+    found = []
+
+    for skill in COMMON_SKILLS:
+        pattern = r"\b" + re.escape(skill) + r"\b"
+
+        if re.search(pattern, text):
+            found.append(skill)
+
+    return sorted(found)
 
 
 def extract_education(text: str):
