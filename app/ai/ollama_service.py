@@ -5,7 +5,6 @@ from ollama import Client
 
 
 class OllamaService:
-
     def __init__(self):
         self.client = Client(
             host="http://localhost:11434"
@@ -17,12 +16,11 @@ class OllamaService:
         job_description: str,
         baseline_result,
     ):
-
-        # Convert MatchResult dataclass to dictionary
+        # Convert MatchResult dataclass
         if is_dataclass(baseline_result):
             baseline_result = asdict(baseline_result)
 
-        # Convert Pydantic models if encountered
+        # Future-proof for Pydantic
         elif hasattr(baseline_result, "model_dump"):
             baseline_result = baseline_result.model_dump()
 
@@ -36,44 +34,85 @@ class OllamaService:
         )
 
         prompt = f"""
-You are a senior technical recruiter and ATS expert.
+You are an experienced technical recruiter, hiring manager, and ATS evaluator.
 
-Your task is to compare the candidate's resume with the job description.
+Your task is to determine how well this candidate matches the job description.
 
-Rules:
+Think like a real recruiter.
 
-- Understand semantic similarity.
-- Do NOT rely only on keyword matching.
-- Consider transferable skills.
-- Do NOT invent skills or experience.
-- Improve the existing rule-based analysis.
+Do NOT rely only on exact keyword matching.
+Understand semantic similarity between technologies and transferable skills.
 
-Resume:
+Examples:
+
+- PostgreSQL = SQL
+- MySQL = SQL
+- SQL Server = SQL
+- FastAPI = REST API Development
+- Flask = Backend Development
+- Pandas + NumPy = Data Analysis
+- Docker Compose = Docker
+- GitHub = Git
+- Jenkins = CI/CD
+
+Use the rule-based analysis only as a reference.
+If you disagree with it, provide your own judgement.
+
+--------------------------------------------------
+RESUME
+--------------------------------------------------
 
 {resume_text}
 
 --------------------------------------------------
-
-Job Description:
+JOB DESCRIPTION
+--------------------------------------------------
 
 {job_description}
 
 --------------------------------------------------
-
-Current Rule-Based Analysis:
+RULE-BASED ANALYSIS
+--------------------------------------------------
 
 {baseline_json}
 
 --------------------------------------------------
 
+Evaluate and determine:
+
+1. ATS Match Score (0-100)
+
+2. Skills already demonstrated that satisfy the job.
+
+3. Important missing skills.
+
+4. Whether the candidate satisfies the required experience.
+
+5. Whether the candidate satisfies the education requirement.
+
+6. Practical recommendations for improving the resume.
+
+7. A concise recruiter summary explaining your decision.
+
 Return ONLY valid JSON.
 
 {{
-    "match_score": 0,
-    "matched_skills": [],
-    "missing_skills": [],
-    "recommendations": [],
-    "summary": ""
+    "match_score": 85,
+    "matched_skills": [
+        "Python",
+        "SQL"
+    ],
+    "missing_skills": [
+        "Docker",
+        "AWS"
+    ],
+    "experience_match": true,
+    "education_match": true,
+    "recommendations": [
+        "Highlight SQL projects.",
+        "Add Docker experience."
+    ],
+    "summary": "The candidate demonstrates strong backend development skills with Python and SQL. Experience aligns well with the role, but Docker and AWS exposure would strengthen the application."
 }}
 """
 
@@ -89,11 +128,11 @@ Return ONLY valid JSON.
 
         content = response["message"]["content"].strip()
 
-        # Remove markdown fences if Ollama returns them
+        # Remove markdown fences if present
         if content.startswith("```"):
             lines = content.splitlines()
 
-            if lines[0].startswith("```"):
+            if lines and lines[0].startswith("```"):
                 lines = lines[1:]
 
             if lines and lines[-1].startswith("```"):
@@ -108,11 +147,10 @@ Return ONLY valid JSON.
         resume_text: str,
         job_description: str,
     ):
-
         prompt = f"""
 You are a senior technical recruiter.
 
-Rewrite this resume so that it better aligns with the job description.
+Rewrite the resume so that it better aligns with the job description.
 
 Rules:
 
@@ -122,17 +160,20 @@ Rules:
 - Never invent education.
 - Never invent skills.
 - Improve wording.
-- Use strong action verbs.
+- Use stronger action verbs.
 - Optimize for ATS.
+- Preserve the original meaning.
 - Keep everything truthful.
 
-Resume:
+--------------------------------------------------
+RESUME
+--------------------------------------------------
 
 {resume_text}
 
 --------------------------------------------------
-
-Job Description:
+JOB DESCRIPTION
+--------------------------------------------------
 
 {job_description}
 
@@ -140,7 +181,7 @@ Job Description:
 
 Return ONLY the rewritten resume.
 
-Do not explain anything.
+Do not include explanations.
 """
 
         response = self.client.chat(
