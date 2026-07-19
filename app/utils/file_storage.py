@@ -1,10 +1,11 @@
+from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
 from fastapi import UploadFile
 
 UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {
     ".pdf",
@@ -12,11 +13,35 @@ ALLOWED_EXTENSIONS = {
 }
 
 
-def save_upload_file(file: UploadFile) -> tuple[str, str]:
+@dataclass(slots=True)
+class SavedFile:
     """
-    Save an uploaded file and return:
-    (saved_path, file_extension)
+    Represents a successfully saved uploaded file.
     """
+
+    original_filename: str
+    stored_filename: str
+    file_path: str
+    file_type: str
+
+
+def save_upload_file(file: UploadFile) -> SavedFile:
+    """
+    Save an uploaded file to disk.
+
+    Args:
+        file: Uploaded file received from FastAPI.
+
+    Returns:
+        A SavedFile instance containing metadata about the saved file.
+
+    Raises:
+        ValueError:
+            If the uploaded file type is not supported.
+    """
+
+    if not file.filename:
+        raise ValueError("Uploaded file has no filename.")
 
     extension = Path(file.filename).suffix.lower()
 
@@ -25,11 +50,16 @@ def save_upload_file(file: UploadFile) -> tuple[str, str]:
             f"Unsupported file type: {extension}"
         )
 
-    unique_name = f"{uuid4()}{extension}"
+    stored_filename = f"{uuid4()}{extension}"
 
-    destination = UPLOAD_DIR / unique_name
+    destination = UPLOAD_DIR / stored_filename
 
     with destination.open("wb") as buffer:
         buffer.write(file.file.read())
 
-    return str(destination), extension.replace(".", "")
+    return SavedFile(
+        original_filename=file.filename,
+        stored_filename=stored_filename,
+        file_path=str(destination),
+        file_type=extension.lstrip("."),
+    )
