@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { analyzeResume } from "../api/resume";
+import { analyzeResume, tailorResume } from "../api/resume";
 
 interface FileUploadProps {
   onSuccess: (result: any) => void;
@@ -15,6 +15,8 @@ export default function FileUpload({ onSuccess }: FileUploadProps) {
   const [jobDescription, setJobDescription] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  const [tailoring, setTailoring] = useState(false);
 
   const [status, setStatus] = useState("");
 
@@ -51,6 +53,50 @@ export default function FileUpload({ onSuccess }: FileUploadProps) {
     }
   }
 
+  async function handleTailorResume() {
+    if (!selectedFile) return;
+
+    if (!jobDescription.trim()) {
+      setStatus("Please paste a Job Description.");
+      setStatusType("error");
+      return;
+    }
+
+    try {
+      setTailoring(true);
+
+      setStatus("Generating tailored resume...");
+      setStatusType("info");
+
+      const blob = await tailorResume(selectedFile, jobDescription);
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "tailored_resume.docx";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      setStatus("Tailored resume downloaded!");
+      setStatusType("success");
+    } catch (e) {
+      console.error(e);
+
+      setStatus("Failed to generate tailored resume.");
+      setStatusType("error");
+    } finally {
+      setTailoring(false);
+    }
+  }
+
   return (
     <div className="rounded-2xl bg-white p-10 shadow-lg">
       <h2 className="text-2xl font-semibold">Upload Resume</h2>
@@ -83,13 +129,23 @@ export default function FileUpload({ onSuccess }: FileUploadProps) {
         onChange={(e) => setJobDescription(e.target.value)}
       />
 
-      <button
-        disabled={!selectedFile || loading}
-        className="mt-6 rounded-xl bg-green-600 px-8 py-3 text-white disabled:bg-gray-400"
-        onClick={handleUpload}
-      >
-        {loading ? "Analyzing..." : "Analyze Resume"}
-      </button>
+      <div className="mt-6 flex gap-4">
+        <button
+          disabled={!selectedFile || loading}
+          className="rounded-xl bg-green-600 px-8 py-3 text-white disabled:bg-gray-400"
+          onClick={handleUpload}
+        >
+          {loading ? "Analyzing..." : "Analyze Resume"}
+        </button>
+
+        <button
+          disabled={!selectedFile || tailoring || loading}
+          className="rounded-xl bg-purple-600 px-8 py-3 text-white disabled:bg-gray-400"
+          onClick={handleTailorResume}
+        >
+          {tailoring ? "Generating..." : "Generate Tailored Resume"}
+        </button>
+      </div>
 
       {status && (
         <div

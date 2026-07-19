@@ -6,9 +6,12 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.ingestion.docx import extract_text as extract_docx_text
 from app.ingestion.pdf import extract_text as extract_pdf_text
+
 from app.resume_analysis.parser import ResumeParser
 from app.job_analysis.parser import JobParser
 from app.matching.engine import MatchingEngine
+
+from app.ai.ollama_service import OllamaService
 
 router = APIRouter(
     prefix="/analyze",
@@ -43,21 +46,51 @@ async def analyze(
         temp_path = Path(temp_file.name)
 
     try:
+        # --------------------------------------------------
+        # Extract Resume Text
+        # --------------------------------------------------
         if suffix == ".pdf":
             resume_text = extract_pdf_text(temp_path)
         else:
             resume_text = extract_docx_text(temp_path)
 
+        # --------------------------------------------------
+        # Parse Resume
+        # --------------------------------------------------
         resume_data = ResumeParser().parse(resume_text)
 
+        # --------------------------------------------------
+        # Parse Job Description
+        # --------------------------------------------------
         job_data = JobParser().parse(job_description)
 
-        result = MatchingEngine().compare(
+        # --------------------------------------------------
+        # Rule-Based Analysis
+        # --------------------------------------------------
+        baseline_result = MatchingEngine().compare(
             resume_data,
             job_data,
         )
 
-        return result
+        # --------------------------------------------------
+        # AI Enhancement
+        # --------------------------------------------------
+        try:
+            ai_result = OllamaService().analyze(
+                resume_text=resume_text,
+                job_description=job_description,
+                baseline_result=baseline_result,
+            )
+
+            return ai_result
+
+        except Exception as e:
+            print("\n========== OLLAMA FAILED ==========")
+            print(e)
+            print("===================================\n")
+
+            # Fall back to deterministic analysis
+            return baseline_result
 
     finally:
         temp_path.unlink(missing_ok=True)

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.routes.analyze import router as analyze_router
-
+from app.api.routes.tailor import router as tailor_router
 from app.api.routes.resume_analysis import (
     router as resume_analysis_router,
 )
@@ -12,6 +12,7 @@ from app.api.routes.resumes import (
 from app.api.routes.users import (
     router as users_router,
 )
+
 
 router = APIRouter()
 
@@ -35,3 +36,4 @@ router.include_router(resumes_router)
 router.include_router(resume_analysis_router)
 router.include_router(job_analysis.router)
 router.include_router(analyze_router)
+router.include_router(tailor_router)

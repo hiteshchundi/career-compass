@@ -18,3 +18,19 @@ export async function analyzeResume(file: File, jobDescription: string) {
 
   return response.data;
 }
+
+export async function tailorResume(file: File, jobDescription: string) {
+  const formData = new FormData();
+
+  formData.append("resume", file);
+  formData.append("job_description", jobDescription);
+
+  const response = await api.post("/tailor", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    responseType: "blob",
+  });
+
+  return response.data;
+}
