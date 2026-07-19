@@ -1,62 +1,53 @@
-import type { ResumeAnalysis } from "../types/resume";
-
 interface Props {
-  result: ResumeAnalysis | null;
+  result: any;
 }
 
-export default function ResumeResult({
-  result,
-}: Props) {
+export default function ResumeResult({ result }: Props) {
   if (!result) return null;
 
   return (
     <div className="mt-10 rounded-2xl bg-white p-10 shadow-lg">
+      <h2 className="text-2xl font-bold">ATS Match Score</h2>
 
-      <h2 className="mb-6 text-2xl font-bold">
-        Resume Analysis
-      </h2>
-
-      <div className="space-y-2">
-
-        <p>
-          <strong>Email:</strong>{" "}
-          {result.contact.email ?? "-"}
-        </p>
-
-        <p>
-          <strong>Phone:</strong>{" "}
-          {result.contact.phone ?? "-"}
-        </p>
-
-        <p>
-          <strong>LinkedIn:</strong>{" "}
-          {result.contact.linkedin ?? "-"}
-        </p>
-
-        <p>
-          <strong>GitHub:</strong>{" "}
-          {result.contact.github ?? "-"}
-        </p>
-
+      <div className="mt-4 text-6xl font-bold text-green-600">
+        {result.match_score}%
       </div>
 
-      <h3 className="mt-8 text-xl font-semibold">
-        Skills
-      </h3>
+      <h3 className="mt-8 text-xl font-semibold">Matching Skills</h3>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-
-        {result.skills.map((skill) => (
-          <span
-            key={skill}
-            className="rounded-full bg-blue-100 px-4 py-2"
-          >
-            {skill}
-          </span>
+      <ul className="mt-2 list-disc pl-6">
+        {result.matching_skills?.map((skill: string) => (
+          <li key={skill}>{skill}</li>
         ))}
+      </ul>
 
+      <h3 className="mt-8 text-xl font-semibold">Missing Skills</h3>
+
+      <ul className="mt-2 list-disc pl-6">
+        {result.missing_skills?.map((skill: string) => (
+          <li key={skill}>{skill}</li>
+        ))}
+      </ul>
+
+      <h3 className="mt-8 text-xl font-semibold">Recommendations</h3>
+
+      <ul className="mt-2 list-disc pl-6">
+        {result.recommendations?.map((item: string) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+
+      <div className="mt-8">
+        <p>
+          <strong>Experience Match:</strong>{" "}
+          {result.experience_match ? "✅ Yes" : "❌ No"}
+        </p>
+
+        <p>
+          <strong>Education Match:</strong>{" "}
+          {result.education_match ? "✅ Yes" : "❌ No"}
+        </p>
       </div>
-
     </div>
   );
 }

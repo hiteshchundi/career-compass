@@ -4,20 +4,17 @@ const api = axios.create({
   baseURL: "http://127.0.0.1:8000",
 });
 
-export const analyzeResume = async (file: File) => {
+export async function analyzeResume(file: File, jobDescription: string) {
   const formData = new FormData();
 
-  formData.append("file", file);
+  formData.append("resume", file);
+  formData.append("job_description", jobDescription);
 
-  const response = await api.post(
-    "/resume-analysis",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await api.post("/analyze", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
   return response.data;
-};
+}

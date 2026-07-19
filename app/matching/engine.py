@@ -1,6 +1,30 @@
+import re
+
 from .recommendations import generate_recommendations
 from .score import calculate_match_score
 from .types import MatchResult
+
+def extract_years(value):
+    if value is None:
+        return 0
+
+    if isinstance(value, int):
+        return value
+
+    if isinstance(value, float):
+        return int(value)
+
+    if isinstance(value, list):
+        text = " ".join(str(v) for v in value)
+    else:
+        text = str(value)
+
+    match = re.search(r"\d+", text)
+
+    if match:
+        return int(match.group())
+
+    return 0
 
 
 class MatchingEngine:
@@ -10,13 +34,19 @@ class MatchingEngine:
         resume: dict,
         job: dict,
     ) -> MatchResult:
+        
+        if hasattr(resume, "model_dump"):
+            resume = resume.model_dump()
+
+        if hasattr(job, "model_dump"):
+            job = job.model_dump()
 
         resume_skills = set(
             resume.get("skills", [])
         )
 
         required_skills = set(
-            job.get("skills", [])
+    job.get("required_skills", [])
         )
 
         matched = sorted(
@@ -34,13 +64,10 @@ class MatchingEngine:
         resume_experience = resume.get("experience")
         required_experience = job.get("experience")
 
-        experience_match = (
-            required_experience is None
-            or (
-                resume_experience is not None
-                and resume_experience >= required_experience
-            )
-        )
+        resume_years = extract_years(resume_experience)
+        required_years = extract_years(required_experience)
+
+        experience_match = resume_years >= required_years
 
         resume_education = resume.get(
             "education",
@@ -84,3 +111,5 @@ class MatchingEngine:
             education_match=education_match,
             recommendations=recommendations,
         )
+
+    
