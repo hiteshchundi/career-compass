@@ -1,226 +1,282 @@
-# Career Compass
+# 🧭 Career Compass
 
-Career Compass is an AI-assisted career platform that helps job seekers understand their resumes through structured analysis. It extracts key information such as contact details, skills, education, and experience, providing the foundation for resume optimization and job matching.
+> AI-powered resume analysis, ATS scoring, skill gap detection, and resume tailoring.
 
-Built for rapid iteration using **FastAPI**, **PostgreSQL**, and **React**.
+Career Compass helps job seekers understand how well their resume matches a job description before they apply.
 
----
+Instead of blindly submitting resumes, users receive:
 
-# Demo Features
+- 📊 Resume-to-job match score
+- 🎯 ATS compatibility score
+- ✅ Matching skills
+- ❌ Missing skills
+- 💡 Personalized improvement suggestions
+- 📄 AI-tailored resume for the selected job
 
-### ✅ Resume Upload
-
-* Upload PDF resumes
-* Upload DOCX resumes
-* Secure file storage
-
-### ✅ Resume Processing
-
-* Extract text from PDF resumes
-* Extract text from DOCX resumes
-* Normalize extracted text
-
-### ✅ Resume Analysis
-
-* Extract contact information
-* Extract technical skills
-* Structured resume analysis schema
-* Deterministic parsing engine
-
-### ✅ Backend
-
-* REST API with FastAPI
-* PostgreSQL database
-* SQLAlchemy ORM
-* Alembic migrations
-* Layered architecture
-* Unit tests
+Built for the hackathon using **FastAPI**, **React**, **TypeScript**, and **Google Gemini**.
 
 ---
 
-# Tech Stack
+# 🚀 Live Demo
 
-## Backend
+### Frontend
 
-* Python 3.14
-* FastAPI
-* PostgreSQL
-* SQLAlchemy 2.0
-* Alembic
-* Pydantic
+**https://career-compass-hitzhraj.vercel.app**
 
-## Resume Processing
+### Backend API
 
-* pypdf
-* python-docx
-* Regular Expressions
+**https://career-compass-jn9h.onrender.com/docs**
+
+---
+
+# ✨ Features
+
+## Resume Analysis
+
+Upload a resume and paste a job description.
+
+Career Compass analyzes:
+
+- Resume relevance
+- ATS compatibility
+- Skill overlap
+- Missing keywords
+- Overall job match
+
+---
+
+## ATS Match Score
+
+Receive an overall percentage indicating how well the resume aligns with the job description.
+
+Example:
+
+```
+Resume Match: 86%
+
+ATS Score: 91%
+```
+
+---
+
+## Skill Gap Detection
+
+Automatically identifies
+
+- Skills found in the resume
+- Skills required by the job
+- Missing skills
+
+Example
+
+```
+Present Skills
+
+✔ Python
+✔ SQL
+✔ Pandas
+✔ Tableau
+
+Missing Skills
+
+✖ Airflow
+✖ Docker
+✖ AWS
+```
+
+---
+
+## Resume Improvement Suggestions
+
+Career Compass generates personalized recommendations such as
+
+- Missing keywords
+- Better resume wording
+- Skills to highlight
+- ATS optimization tips
+
+---
+
+## AI Resume Tailoring
+
+Generate a tailored version of your resume specifically for the selected job description while preserving your actual experience.
+
+The tailored resume is downloadable as a PDF.
+
+---
+
+# 🏗️ Tech Stack
 
 ## Frontend
 
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
+- React
+- TypeScript
+- Vite
+- Axios
+
+## Backend
+
+- FastAPI
+- Python
+- PyMuPDF
+- python-docx
+
+## AI
+
+- Google Gemini
+
+## Deployment
+
+- Vercel
+- Render
 
 ---
 
-# Architecture
+# 📂 Project Structure
 
 ```
-                Resume Upload
-                      │
-                      ▼
-            PDF / DOCX Extraction
-                      │
-                      ▼
-          Resume Analysis Engine
-                      │
-                      ▼
-          Structured Resume Data
-                      │
-                      ▼
-                FastAPI API
-                      │
-                      ▼
-                PostgreSQL
-                      │
-                      ▼
-                 React Frontend
-```
-
----
-
-# Current Project Structure
-
-```
-app/
-├── api/
-├── db/
-├── ingestion/
-├── repositories/
-├── resume_analysis/
-├── schemas/
-├── services/
-├── storage/
-└── utils/
-
-tests/
+career-compass/
+│
+├── frontend/
+│   ├── src/
+│   └── public/
+│
+├── app/
+│   ├── api/
+│   ├── services/
+│   ├── ingestion/
+│   ├── ai/
+│   └── schemas/
+│
+├── tests/
+│
+└── README.md
 ```
 
 ---
 
-# Getting Started
+# ⚙️ Local Setup
 
-## Clone the repository
+## Clone
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/hiteshchundi/career-compass.git
+
 cd career-compass
 ```
 
-## Create a virtual environment
+---
+
+## Backend
 
 ```bash
 python -m venv .venv
-```
 
-## Activate the environment
-
-### macOS / Linux
-
-```bash
 source .venv/bin/activate
-```
 
-### Windows
-
-```bash
-.venv\Scripts\activate
-```
-
-## Install dependencies
-
-```bash
 pip install -r requirements.txt
-```
 
-## Configure environment
-
-Create a `.env` file.
-
-```env
-DATABASE_URL=postgresql+psycopg://username:password@localhost/career_compass
-```
-
-## Run database migrations
-
-```bash
-alembic upgrade head
-```
-
-## Start the server
-
-```bash
 uvicorn app.main:app --reload
 ```
 
-Open:
+Backend runs on
 
 ```
-http://127.0.0.1:8000/docs
+http://127.0.0.1:8000
 ```
 
 ---
 
-# Development Progress
+## Frontend
 
-## ✅ Completed
+```bash
+cd frontend
 
-* FastAPI backend
-* PostgreSQL integration
-* SQLAlchemy ORM
-* Alembic migrations
-* User management API
-* Resume upload API
-* PDF extraction
-* DOCX extraction
-* Text normalization
-* Resume analysis schema
-* Resume parser
-* Contact extraction
-* Skills extraction
-* Unit testing
+npm install
 
-## 🚧 In Progress
+npm run dev
+```
 
-* Education extraction
-* Experience extraction
-* Resume analysis endpoint
-* React dashboard
+Frontend runs on
 
-## 🔜 Next
-
-* Resume vs Job Description matching
-* Skill gap analysis
-* ATS score
-* AI-powered resume recommendations
-* Resume tailoring
-* Cover letter generation
+```
+http://localhost:5173
+```
 
 ---
 
-# Hackathon Vision
+# 🔑 Environment Variables
 
-Career Compass aims to become an intelligent career assistant that helps job seekers:
+Backend
 
-* Understand their resumes
-* Identify missing skills
-* Match resumes against job descriptions
-* Improve ATS compatibility
-* Receive AI-powered career recommendations
+```
+GOOGLE_API_KEY=your_google_gemini_api_key
+```
+
+Frontend
+
+```
+VITE_API_URL=http://127.0.0.1:8000
+```
+
+Production
+
+```
+VITE_API_URL=https://career-compass-jn9h.onrender.com
+```
 
 ---
 
-# License
+# 📸 Demo Flow
 
-MIT License
+1. Upload resume
+2. Paste job description
+3. Click **Analyze Resume**
+4. Review
+
+- Match Score
+- ATS Score
+- Matching Skills
+- Missing Skills
+- Suggestions
+
+5. Click **Generate Tailored Resume**
+6. Download the customized resume
+
+---
+
+# 🎯 Future Roadmap
+
+- Multiple resume management
+- Job URL parsing
+- Cover letter generation
+- Interview question generation
+- Resume version history
+- Authentication
+- Dashboard & analytics
+- Job application tracking
+
+---
+
+# 👨‍💻 Author
+
+**Hitesh Chundi**
+
+GitHub
+
+https://github.com/hiteshchundi
+
+---
+
+# 🙏 Acknowledgements
+
+- Google Gemini
+- FastAPI
+- React
+- Vite
+- Render
+- Vercel
+
+---
+
+# ⭐ If you found this project interesting, consider giving it a star!
