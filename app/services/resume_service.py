@@ -1,11 +1,9 @@
 from fastapi import UploadFile
 
 from app.db.models.resume import Resume
-from app.ingestion.extractors import EXTRACTORS
-from app.ingestion.normalizer import normalize_text
-from app.repositories.resume_repository import ResumeRepository
+from app.db.repositories.resume_repository import ResumeRepository
 from app.services.base_service import BaseService
-from app.utils.file_storage import save_upload_file
+from app.document_processing.processor import DocumentProcessor
 
 
 class ResumeService(BaseService[ResumeRepository]):
@@ -24,18 +22,7 @@ class ResumeService(BaseService[ResumeRepository]):
         and persist it to the database.
         """
 
-        saved_file = save_upload_file(file)
-
-        try:
-            extractor = EXTRACTORS[saved_file.file_type]
-        except KeyError as exc:
-            raise ValueError(
-                f"Unsupported file type: {saved_file.file_type}"
-            ) from exc
-
-        extracted_text = extractor(saved_file.file_path)
-
-        normalized_text = normalize_text(extracted_text)
+        saved_file, normalized_text = DocumentProcessor.process(file)
 
         resume = Resume(
             user_id=user_id,
