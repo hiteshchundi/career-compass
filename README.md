@@ -1,117 +1,96 @@
 # Career Compass
 
-An AI-powered resume analysis platform built with **FastAPI**, **PostgreSQL**, and **React** (frontend coming soon).
+Career Compass is an AI-assisted career platform that helps job seekers understand their resumes through structured analysis. It extracts key information such as contact details, skills, education, and experience, providing the foundation for resume optimization and job matching.
 
-Career Compass helps users understand their resumes by extracting structured information such as skills, experience, education, projects, and certifications. Future versions will compare resumes against job descriptions, identify skill gaps, provide ATS optimization suggestions, and generate AI-powered recommendations.
+Built for rapid iteration using **FastAPI**, **PostgreSQL**, and **React**.
 
 ---
 
-## Project Status
+# Demo Features
 
-**Current Version:** v0.1.0
+### ✅ Resume Upload
 
-### ✅ Completed
+* Upload PDF resumes
+* Upload DOCX resumes
+* Secure file storage
 
-* FastAPI backend
-* PostgreSQL integration
+### ✅ Resume Processing
+
+* Extract text from PDF resumes
+* Extract text from DOCX resumes
+* Normalize extracted text
+
+### ✅ Resume Analysis
+
+* Extract contact information
+* Extract technical skills
+* Structured resume analysis schema
+* Deterministic parsing engine
+
+### ✅ Backend
+
+* REST API with FastAPI
+* PostgreSQL database
 * SQLAlchemy ORM
-* Alembic database migrations
-* Layered architecture (Router → Service → Repository)
-* User management API
-* Resume upload API
-* PDF resume extraction
-* DOCX resume extraction
-* Resume text normalization
-* File storage system
-* End-to-end resume ingestion pipeline
+* Alembic migrations
+* Layered architecture
+* Unit tests
 
-### 🚧 In Progress
+---
 
-* Resume Analysis Engine
+# Tech Stack
 
-### 📌 Planned
+## Backend
 
-* Structured resume parsing
-* Job description analysis
-* Resume-job matching
-* ATS score generation
-* AI-powered resume recommendations
-* Clean React frontend
+* Python 3.14
+* FastAPI
+* PostgreSQL
+* SQLAlchemy 2.0
+* Alembic
+* Pydantic
+
+## Resume Processing
+
+* pypdf
+* python-docx
+* Regular Expressions
+
+## Frontend
+
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
 
 ---
 
 # Architecture
 
 ```
-Client
-    │
-    ▼
-FastAPI
-    │
-    ▼
-Routers
-    │
-    ▼
-Services
-    │
-    ▼
-Repositories
-    │
-    ▼
-SQLAlchemy ORM
-    │
-    ▼
-PostgreSQL
+                Resume Upload
+                      │
+                      ▼
+            PDF / DOCX Extraction
+                      │
+                      ▼
+          Resume Analysis Engine
+                      │
+                      ▼
+          Structured Resume Data
+                      │
+                      ▼
+                FastAPI API
+                      │
+                      ▼
+                PostgreSQL
+                      │
+                      ▼
+                 React Frontend
 ```
 
 ---
 
-# Tech Stack
-
-### Backend
-
-* Python 3.14
-* FastAPI
-* SQLAlchemy 2.0
-* PostgreSQL
-* Alembic
-* Pydantic
-
-### Resume Processing
-
-* pypdf
-* python-docx
-
-### Frontend (Planned)
-
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* shadcn/ui
-
----
-
-# Current Features
-
-## User Management
-
-* Create users
-* Retrieve users
-* Email uniqueness validation
-
-## Resume Upload
-
-* Upload PDF resumes
-* Upload DOCX resumes
-* Automatic text extraction
-* Text normalization
-* Store uploaded files
-* Persist extracted resume data
-
----
-
-# Project Structure
+# Current Project Structure
 
 ```
 app/
@@ -119,10 +98,13 @@ app/
 ├── db/
 ├── ingestion/
 ├── repositories/
+├── resume_analysis/
 ├── schemas/
 ├── services/
 ├── storage/
 └── utils/
+
+tests/
 ```
 
 ---
@@ -142,15 +124,15 @@ cd career-compass
 python -m venv .venv
 ```
 
-## Activate
+## Activate the environment
 
-macOS/Linux
+### macOS / Linux
 
 ```bash
 source .venv/bin/activate
 ```
 
-Windows
+### Windows
 
 ```bash
 .venv\Scripts\activate
@@ -166,19 +148,17 @@ pip install -r requirements.txt
 
 Create a `.env` file.
 
-Example:
-
-```
+```env
 DATABASE_URL=postgresql+psycopg://username:password@localhost/career_compass
 ```
 
-## Run migrations
+## Run database migrations
 
 ```bash
 alembic upgrade head
 ```
 
-## Start the application
+## Start the server
 
 ```bash
 uvicorn app.main:app --reload
@@ -192,29 +172,52 @@ http://127.0.0.1:8000/docs
 
 ---
 
-# Roadmap
+# Development Progress
 
-## Phase 1
+## ✅ Completed
 
-* ✅ Resume upload
-* 🚧 Resume analysis
+* FastAPI backend
+* PostgreSQL integration
+* SQLAlchemy ORM
+* Alembic migrations
+* User management API
+* Resume upload API
+* PDF extraction
+* DOCX extraction
+* Text normalization
+* Resume analysis schema
+* Resume parser
+* Contact extraction
+* Skills extraction
+* Unit testing
 
-## Phase 2
+## 🚧 In Progress
 
-* Job description parsing
-* Structured job representation
+* Education extraction
+* Experience extraction
+* Resume analysis endpoint
+* React dashboard
 
-## Phase 3
+## 🔜 Next
 
-* Resume-job matching
+* Resume vs Job Description matching
 * Skill gap analysis
-* ATS scoring
-
-## Phase 4
-
-* AI recommendations
+* ATS score
+* AI-powered resume recommendations
 * Resume tailoring
 * Cover letter generation
+
+---
+
+# Hackathon Vision
+
+Career Compass aims to become an intelligent career assistant that helps job seekers:
+
+* Understand their resumes
+* Identify missing skills
+* Match resumes against job descriptions
+* Improve ATS compatibility
+* Receive AI-powered career recommendations
 
 ---
 
