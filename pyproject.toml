@@ -24,3 +24,8 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+dependencies = [
+    ...
+    "openai>=1.40.0",
+]
