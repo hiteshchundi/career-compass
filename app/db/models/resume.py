@@ -18,41 +18,41 @@ class Resume(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-    )
+    ForeignKey("users.id", ondelete="CASCADE"),
+    nullable=False,
+)
 
     original_filename: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-    )
+    String(255),
+    nullable=False,
+)
 
     stored_filename: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-        unique=True,
-    )
+    String(255),
+    nullable=False,
+    unique=True,
+)
 
     file_path: Mapped[str] = mapped_column(
-        String(500),
-        nullable=False,
-    )
+    String(500),
+    nullable=False,
+)
 
     file_type: Mapped[str] = mapped_column(
-        String(10),
-        nullable=False,
-    )
+    String(20),
+    nullable=False,
+)
 
     extracted_text: Mapped[str] = mapped_column(
-        Text,
-        nullable=False,
-    )
+    Text,
+    nullable=False,
+)
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
-        nullable=False,
-    )
+    DateTime,
+    default=datetime.utcnow,
+    nullable=False,
+)
 
     user: Mapped[User] = relationship(
         "User",
