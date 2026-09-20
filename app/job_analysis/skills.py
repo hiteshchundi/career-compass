@@ -1,8 +1,6 @@
-"""
-Central skill catalog.
+"""Canonical skill names shared by resume and job parsing."""
 
-Both Resume Parser and Job Parser will eventually use this file.
-"""
+import re
 
 SKILL_CATALOG = {
     "python": ["python"],
@@ -104,3 +102,12 @@ SKILL_CATALOG = {
         "excel",
     ]
 }
+
+
+def find_skills(text: str) -> list[str]:
+    found = set()
+    for canonical, aliases in SKILL_CATALOG.items():
+        if any(re.search(r"(?<!\w)" + re.escape(alias) + r"(?!\w)", text, re.I)
+               for alias in aliases):
+            found.add(canonical)
+    return sorted(found)

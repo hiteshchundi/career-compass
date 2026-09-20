@@ -11,8 +11,8 @@ class MatchResult:
 
     extra_skills: list[str]
 
-    experience_match: bool
+    experience_match: bool | None
 
-    education_match: bool
+    education_match: bool | None
 
     recommendations: list[str]

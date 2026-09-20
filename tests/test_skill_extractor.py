@@ -15,7 +15,7 @@ def test_extract_skills():
 
     assert "python" in skills
     assert "fastapi" in skills
-    assert "postgresql" in skills
+    assert "sql" in skills
     assert "docker" in skills
     assert "git" in skills
     assert "pandas" in skills
