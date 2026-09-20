@@ -5,7 +5,7 @@ from pathlib import Path
 from docx import Document
 from fastapi import HTTPException, UploadFile
 
-from app.ai.llm_service import AIUnavailableError
+from app.ai.llm_service import AIUnavailableError, LLMService
 from app.api.routes import analyze, tailor
 from app.ingestion.docx import extract_text as extract_docx_text
 
@@ -93,3 +93,11 @@ def test_invalid_resume_returns_422():
         assert exc.status_code == 422
     else:
         raise AssertionError("Expected an extraction error")
+
+
+def test_groq_model_uses_supported_default_and_can_be_overridden(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "synthetic-key")
+    monkeypatch.delenv("GROQ_MODEL", raising=False)
+    assert LLMService().model == "openai/gpt-oss-120b"
+    monkeypatch.setenv("GROQ_MODEL", "custom-model")
+    assert LLMService().model == "custom-model"

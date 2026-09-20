@@ -10,7 +10,7 @@ The score is a **rule-based job match estimate**, not a score from an employer's
 
 The parser recognizes a bounded skill catalog and common degree and tenure formats. It does not understand every job description or resume layout. Overlapping work periods are not added together; the longest stated tenure or date range is used. Scanned/image-only PDFs need OCR before upload. Review the extracted result and the generated resume before using either for an application.
 
-Groq adds an optional prose summary to the deterministic analysis. If Groq is unavailable, the analysis still returns with `ai_status: "unavailable"`. Groq is required for tailored resume generation. Generation failures return HTTP 503 and a visible message. The generated file is a **DOCX**, not a PDF. AI output is not fact-verified beyond the prompt's instruction to preserve candidate facts.
+Groq adds an optional prose summary to the deterministic analysis. If Groq is unavailable, the analysis still returns with `ai_status: "unavailable"`. Groq is required for tailored resume generation. Generation failures return HTTP 503 and a visible message. The generated file is a **DOCX**, not a PDF. AI output is not fact-verified beyond the prompt's instruction to preserve candidate facts. The default Groq model is `openai/gpt-oss-120b`; set `GROQ_MODEL` to a model available to your account if needed.
 
 ## Local setup
 
@@ -21,6 +21,7 @@ python3.14 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 export GROQ_API_KEY=your_key   # needed for AI summary and tailoring
+# optional: export GROQ_MODEL=openai/gpt-oss-120b
 uvicorn app.main:app --reload
 ```
 
@@ -36,7 +37,7 @@ Open `http://localhost:5173`. Do not commit `.env` files or API keys.
 
 ## Deployment
 
-- Configure Render to run `uvicorn app.main:app --host 0.0.0.0 --port $PORT` with `GROQ_API_KEY` in its environment. Redeploy the backend after changes are merged to its deployed branch.
+- Configure Render to run `uvicorn app.main:app --host 0.0.0.0 --port $PORT` with `GROQ_API_KEY` in its environment. `GROQ_MODEL` may override the default. Redeploy the backend after changes are merged to its deployed branch.
 - Vercel uses `frontend` as the project root, Vite as the framework, and `VITE_API_URL=https://career-compass-jn9h.onrender.com` at build time. Redeploy after changing that variable.
 - Backend CORS permits the two known Vercel domains, `career-compass-hitzhraj.vercel.app` and `career-compass-zeta-dun.vercel.app`, plus local development on port 5173. Add any future frontend domain to `app/main.py` before using it.
 - `/users` and `/resumes` are not exposed because they had no authentication or ownership checks. The upload/analyze/tailor flow does not need those routes.

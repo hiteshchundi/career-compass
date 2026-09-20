@@ -24,7 +24,7 @@ class LLMService:
             timeout=60,
             max_retries=1,
         )
-        self.model = "llama-3.3-70b-versatile"
+        self.model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
     def _complete(self, prompt: str) -> str:
         try:
