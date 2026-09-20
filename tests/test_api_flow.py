@@ -7,6 +7,7 @@ from fastapi import HTTPException, UploadFile
 
 from app.ai.llm_service import AIUnavailableError
 from app.api.routes import analyze, tailor
+from app.ingestion.docx import extract_text as extract_docx_text
 
 
 def resume_file() -> UploadFile:
@@ -74,3 +75,21 @@ def test_tailor_reports_provider_failure(monkeypatch):
         assert "temporarily unavailable" in exc.detail
     else:
         raise AssertionError("Expected a 503 response")
+
+
+def test_docx_table_content_is_extracted(tmp_path):
+    document = Document()
+    document.add_table(rows=1, cols=1).cell(0, 0).text = "Bachelor of Technology, Python"
+    path = tmp_path / "table-resume.docx"
+    document.save(path)
+    assert "Bachelor of Technology, Python" in extract_docx_text(path)
+
+
+def test_invalid_resume_returns_422():
+    file = UploadFile(file=BytesIO(b"not a DOCX"), filename="broken.docx")
+    try:
+        asyncio.run(analyze.analyze(file, "Python role"))
+    except HTTPException as exc:
+        assert exc.status_code == 422
+    else:
+        raise AssertionError("Expected an extraction error")

@@ -5,6 +5,7 @@ export interface ResumeAnalysis {
   extra_skills: string[];
   experience_match: boolean | null;
   education_match: boolean | null;
+  education_or_experience: boolean;
   recommendations: string[];
   summary: string | null;
   ai_status: "available" | "unavailable";

@@ -44,14 +44,18 @@ class MatchingEngine:
         resume_degree = degree_rank(resume.get("education"))
         experience_match = resume_years >= required_years if required_years else None
         education_match = resume_degree >= required_degree if required_degree else None
+        alternative = bool(job.get("education_or_experience") and required_years and required_degree)
 
         weights = []
         if required_skills:
             weights.append((70, len(matched) / len(required_skills)))
-        if required_years:
-            weights.append((20, min(resume_years / required_years, 1)))
-        if required_degree:
-            weights.append((10, float(bool(education_match))))
+        if alternative:
+            weights.append((20, max(min(resume_years / required_years, 1), float(bool(education_match)))))
+        else:
+            if required_years:
+                weights.append((20, min(resume_years / required_years, 1)))
+            if required_degree:
+                weights.append((10, float(bool(education_match))))
         score = round(100 * sum(weight * ratio for weight, ratio in weights) /
                       sum(weight for weight, _ in weights), 2) if weights else 0.0
 
@@ -62,9 +66,10 @@ class MatchingEngine:
             extra_skills=sorted(resume_skills - required_skills),
             experience_match=experience_match,
             education_match=education_match,
+            education_or_experience=alternative,
             recommendations=generate_recommendations(
                 missing_skills=missing,
-                experience_match=experience_match,
-                education_match=education_match,
+                experience_match=experience_match if not alternative or not education_match else None,
+                education_match=education_match if not alternative or not experience_match else None,
             ) if weights else ["The job description has no recognizable requirements to assess."],
         )

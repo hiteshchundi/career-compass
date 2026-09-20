@@ -8,6 +8,8 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.ingestion.docx import extract_text as extract_docx_text
 from app.ingestion.pdf import extract_text as extract_pdf_text
+from app.ingestion.docx import DOCXExtractionError
+from app.ingestion.pdf import PDFExtractionError
 
 from app.resume_analysis.parser import ResumeParser
 from app.job_analysis.parser import JobParser
@@ -56,10 +58,13 @@ async def analyze(
         # --------------------------------------------------
         # Extract Resume Text
         # --------------------------------------------------
-        if suffix == ".pdf":
-            resume_text = extract_pdf_text(temp_path)
-        else:
-            resume_text = extract_docx_text(temp_path)
+        try:
+            if suffix == ".pdf":
+                resume_text = extract_pdf_text(temp_path)
+            else:
+                resume_text = extract_docx_text(temp_path)
+        except (PDFExtractionError, DOCXExtractionError) as exc:
+            raise HTTPException(status_code=422, detail="Resume text could not be extracted.") from exc
 
         # --------------------------------------------------
         # Parse Resume

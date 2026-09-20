@@ -8,6 +8,8 @@ from starlette.background import BackgroundTask
 
 from app.ingestion.docx import extract_text as extract_docx_text
 from app.ingestion.pdf import extract_text as extract_pdf_text
+from app.ingestion.docx import DOCXExtractionError
+from app.ingestion.pdf import PDFExtractionError
 
 from app.ai.llm_service import AIUnavailableError, LLMService
 from app.ai.docx_generator import ResumeGenerator
@@ -51,10 +53,13 @@ async def tailor_resume(
         # ----------------------------
         # Extract Resume Text
         # ----------------------------
-        if suffix == ".pdf":
-            resume_text = extract_pdf_text(temp_path)
-        else:
-            resume_text = extract_docx_text(temp_path)
+        try:
+            if suffix == ".pdf":
+                resume_text = extract_pdf_text(temp_path)
+            else:
+                resume_text = extract_docx_text(temp_path)
+        except (PDFExtractionError, DOCXExtractionError) as exc:
+            raise HTTPException(status_code=422, detail="Resume text could not be extracted.") from exc
 
         # ----------------------------
         # Generate AI Tailored Resume

@@ -9,12 +9,12 @@ def generate_recommendations(
 
     for skill in missing_skills:
         recommendations.append(
-            f"Add evidence of '{skill}' through projects or work experience."
+            f"If you have used '{skill}', show specific evidence in your work or projects."
         )
 
     if experience_match is False:
         recommendations.append(
-            "Highlight projects that demonstrate equivalent experience."
+            "Clarify your relevant dates and scope of work so your experience can be assessed."
         )
 
     if education_match is False:

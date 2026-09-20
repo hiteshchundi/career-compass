@@ -27,7 +27,7 @@ export async function analyzeResume(file: File, jobDescription: string): Promise
     const response = await api.post<ResumeAnalysis>("/analyze", formData);
     return response.data;
   } catch (error) {
-    throw new Error(await errorMessage(error, "Analysis failed. Please try again."));
+    throw new Error(await errorMessage(error, "Analysis failed. Please try again."), { cause: error });
   }
 }
 
@@ -41,6 +41,6 @@ export async function tailorResume(file: File, jobDescription: string) {
     const response = await api.post<Blob>("/tailor", formData, { responseType: "blob" });
     return response.data;
   } catch (error) {
-    throw new Error(await errorMessage(error, "Resume generation failed. Please try again."));
+    throw new Error(await errorMessage(error, "Resume generation failed. Please try again."), { cause: error });
   }
 }

@@ -1,10 +1,12 @@
 import json
+import logging
 import os
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 class AIUnavailableError(Exception):
@@ -16,7 +18,12 @@ class LLMService:
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
             raise AIUnavailableError("GROQ_API_KEY is not configured")
-        self.client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
+        self.client = OpenAI(
+            api_key=api_key,
+            base_url="https://api.groq.com/openai/v1",
+            timeout=60,
+            max_retries=1,
+        )
         self.model = "llama-3.3-70b-versatile"
 
     def _complete(self, prompt: str) -> str:
@@ -31,6 +38,11 @@ class LLMService:
                 raise ValueError("Empty AI response")
             return content.strip()
         except Exception as exc:
+            logger.warning(
+                "Groq request failed: %s (HTTP %s)",
+                type(exc).__name__,
+                getattr(exc, "status_code", "unknown"),
+            )
             raise AIUnavailableError("AI provider request failed") from exc
 
     def summarize(self, resume_text: str, job_description: str, baseline_result: dict) -> str:

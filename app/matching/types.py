@@ -15,4 +15,6 @@ class MatchResult:
 
     education_match: bool | None
 
+    education_or_experience: bool
+
     recommendations: list[str]

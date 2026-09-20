@@ -99,7 +99,7 @@ export default function ResumeResult({ result }: Props) {
           <h4 className="font-semibold">Experience Match</h4>
 
           <p className="mt-2 text-lg">
-            {result.experience_match === null ? "Not specified in job" : result.experience_match ? "✅ Yes" : "❌ No"}
+            {result.experience_match === null ? "Not specified in job" : result.experience_match ? "✅ Yes" : result.education_or_experience && result.education_match ? "Alternative met through education" : "❌ No"}
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export default function ResumeResult({ result }: Props) {
           <h4 className="font-semibold">Education Match</h4>
 
           <p className="mt-2 text-lg">
-            {result.education_match === null ? "Not specified in job" : result.education_match ? "✅ Yes" : "❌ No"}
+            {result.education_match === null ? "Not specified in job" : result.education_match ? "✅ Yes" : result.education_or_experience && result.experience_match ? "Alternative met through experience" : "❌ No"}
           </p>
         </div>
       </div>
