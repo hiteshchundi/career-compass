@@ -12,9 +12,6 @@ class ResumeRead(BaseModel):
     user_id: int
 
     original_filename: str
-    stored_filename: str
-
-    file_path: str
     file_type: str
 
     created_at: datetime
