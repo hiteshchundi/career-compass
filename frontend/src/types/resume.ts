@@ -1,20 +1,11 @@
 export interface ResumeAnalysis {
-  contact: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    location?: string;
-    linkedin?: string;
-    github?: string;
-  };
-
-  skills: string[];
-
-  education: unknown[];
-
-  experience: unknown[];
-
-  projects: unknown[];
-
-  certifications: unknown[];
+  match_score: number;
+  matched_skills: string[];
+  missing_skills: string[];
+  extra_skills: string[];
+  experience_match: boolean | null;
+  education_match: boolean | null;
+  recommendations: string[];
+  summary: string | null;
+  ai_status: "available" | "unavailable";
 }

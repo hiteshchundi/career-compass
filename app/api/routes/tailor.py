@@ -4,11 +4,12 @@ import tempfile
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 
 from app.ingestion.docx import extract_text as extract_docx_text
 from app.ingestion.pdf import extract_text as extract_pdf_text
 
-from app.ai.llm_service import LLMService
+from app.ai.llm_service import AIUnavailableError, LLMService
 from app.ai.docx_generator import ResumeGenerator
 
 router = APIRouter(
@@ -27,6 +28,9 @@ async def tailor_resume(
             status_code=400,
             detail="Resume is required.",
         )
+
+    if not job_description.strip():
+        raise HTTPException(status_code=400, detail="Job description is required.")
 
     suffix = Path(resume.filename).suffix.lower()
 
@@ -55,10 +59,16 @@ async def tailor_resume(
         # ----------------------------
         # Generate AI Tailored Resume
         # ----------------------------
-        tailored_resume = LLMService().tailor_resume(
-            resume_text=resume_text,
-            job_description=job_description,
-        )
+        try:
+            tailored_resume = LLMService().tailor_resume(
+                resume_text=resume_text,
+                job_description=job_description,
+            )
+        except AIUnavailableError as exc:
+            raise HTTPException(
+                status_code=503,
+                detail="Resume generation is temporarily unavailable. Please try again later.",
+            ) from exc
 
         # ----------------------------
         # Create DOCX
@@ -70,15 +80,17 @@ async def tailor_resume(
 
         output_file.close()
 
-        ResumeGenerator.generate(
-            tailored_resume,
-            output_file.name,
-        )
+        try:
+            ResumeGenerator.generate(tailored_resume, output_file.name)
+        except Exception:
+            Path(output_file.name).unlink(missing_ok=True)
+            raise
 
         return FileResponse(
             path=output_file.name,
             filename="tailored_resume.docx",
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            background=BackgroundTask(Path(output_file.name).unlink, missing_ok=True),
         )
 
     finally:

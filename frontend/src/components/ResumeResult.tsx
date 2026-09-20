@@ -1,5 +1,7 @@
+import type { ResumeAnalysis } from "../types/resume";
+
 interface Props {
-  result: any;
+  result: ResumeAnalysis | null;
 }
 
 export default function ResumeResult({ result }: Props) {
@@ -29,6 +31,12 @@ export default function ResumeResult({ result }: Props) {
       <p className={`mt-2 text-xl font-semibold ${scoreColor}`}>{scoreLabel}</p>
 
       {/* AI Summary */}
+
+      {result.ai_status === "unavailable" && (
+        <p className="mt-4 rounded-lg bg-amber-50 p-4 text-amber-900">
+          AI summary is temporarily unavailable. The match analysis uses resume and job description evidence.
+        </p>
+      )}
 
       {result.summary && (
         <>
@@ -91,7 +99,7 @@ export default function ResumeResult({ result }: Props) {
           <h4 className="font-semibold">Experience Match</h4>
 
           <p className="mt-2 text-lg">
-            {result.experience_match ? "✅ Yes" : "❌ No"}
+            {result.experience_match === null ? "Not specified in job" : result.experience_match ? "✅ Yes" : "❌ No"}
           </p>
         </div>
 
@@ -99,7 +107,7 @@ export default function ResumeResult({ result }: Props) {
           <h4 className="font-semibold">Education Match</h4>
 
           <p className="mt-2 text-lg">
-            {result.education_match ? "✅ Yes" : "❌ No"}
+            {result.education_match === null ? "Not specified in job" : result.education_match ? "✅ Yes" : "❌ No"}
           </p>
         </div>
       </div>
