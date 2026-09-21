@@ -6,6 +6,7 @@ from docx import Document
 from fastapi import HTTPException, UploadFile
 
 from app.ai.llm_service import AIUnavailableError, LLMService
+from app.ai.docx_generator import ResumeGenerator
 from app.api.routes import analyze, tailor
 from app.ingestion.docx import extract_text as extract_docx_text
 
@@ -48,7 +49,7 @@ def test_analyze_adds_summary_without_changing_score(monkeypatch):
 def test_tailor_download_is_valid_docx_and_temp_file_is_removed(monkeypatch):
     class Available:
         def tailor_resume(self, **kwargs):
-            return "BACHELOR OF TECHNOLOGY\nPython and Docker experience across four years of work."
+            return "Bachelor of Technology. Python and Docker. 4 years experience."
 
     monkeypatch.setattr(tailor, "LLMService", Available)
     response = asyncio.run(tailor.tailor_resume(resume_file(), "Python role"))
@@ -101,3 +102,51 @@ def test_groq_model_uses_supported_default_and_can_be_overridden(monkeypatch):
     assert LLMService().model == "openai/gpt-oss-120b"
     monkeypatch.setenv("GROQ_MODEL", "custom-model")
     assert LLMService().model == "custom-model"
+
+
+def test_tailor_only_reorders_original_resume_sections(monkeypatch):
+    service = LLMService.__new__(LLMService)
+    service._complete = lambda prompt: '{"ordered_block_numbers":[0,2,1]}'
+    original = "Synthetic Candidate\nSKILLS\nPython and Docker\nEXPERIENCE\n4 years experience"
+
+    result = service.tailor_resume(original, "Python role")
+
+    assert result.splitlines() == [
+        "Synthetic Candidate",
+        "EXPERIENCE",
+        "4 years experience",
+        "SKILLS",
+        "Python and Docker",
+    ]
+
+
+def test_tailor_rejects_missing_or_duplicate_lines():
+    service = LLMService.__new__(LLMService)
+    service._complete = lambda prompt: '{"ordered_block_numbers":[0,0]}'
+
+    try:
+        service.tailor_resume("Candidate\nSKILLS\nPython", "Python role")
+    except AIUnavailableError as exc:
+        assert "Invalid AI tailoring response" in str(exc)
+    else:
+        raise AssertionError("Expected an invalid tailoring response")
+
+
+def test_generated_docx_uses_headings_and_bullets_without_markdown(tmp_path):
+    path = tmp_path / "tailored.docx"
+    ResumeGenerator.generate(
+        "# SKILLS\n- Python\n**EXPERIENCE**\n* Four years",
+        path,
+    )
+
+    document = Document(path)
+    paragraphs = document.paragraphs
+    assert [paragraph.text for paragraph in paragraphs] == [
+        "SKILLS",
+        "Python",
+        "EXPERIENCE",
+        "Four years",
+    ]
+    assert paragraphs[0].style.name.startswith("Heading")
+    assert paragraphs[1].style.name == "List Bullet"
+    assert all("**" not in paragraph.text for paragraph in paragraphs)

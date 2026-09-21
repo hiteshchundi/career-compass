@@ -10,7 +10,7 @@ The score is a **rule-based job match estimate**, not a score from an employer's
 
 The parser recognizes a bounded skill catalog and common degree and tenure formats. It does not understand every job description or resume layout. Overlapping work periods are not added together; the longest stated tenure or date range is used. Scanned/image-only PDFs need OCR before upload. Review the extracted result and the generated resume before using either for an application.
 
-Groq adds an optional prose summary to the deterministic analysis. If Groq is unavailable, the analysis still returns with `ai_status: "unavailable"`. Groq is required for tailored resume generation. Generation failures return HTTP 503 and a visible message. The generated file is a **DOCX**, not a PDF. AI output is not fact-verified beyond the prompt's instruction to preserve candidate facts. The default Groq model is `openai/gpt-oss-120b`; set `GROQ_MODEL` to a model available to your account if needed.
+Groq adds an optional prose summary to the deterministic analysis. If Groq is unavailable, the analysis still returns with `ai_status: "unavailable"`. Groq is required for tailored resume generation. Generation failures return HTTP 503 and a visible message. The generated file is a **DOCX**, not a PDF. For factual safety, Groq may only reorder the resume's original sections for relevance. The header stays first, the lines within each section keep their order, and the server rejects a response that omits, duplicates, or invents content. The default Groq model is `openai/gpt-oss-120b`; set `GROQ_MODEL` to a model available to your account if needed.
 
 ## Local setup
 
