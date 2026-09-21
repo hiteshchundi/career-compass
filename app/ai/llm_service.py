@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from app.ai.resume_structure import split_resume_blocks
+
 load_dotenv()
 logger = logging.getLogger(__name__)
 
@@ -71,18 +73,43 @@ Verified matching result:
             raise AIUnavailableError("Invalid AI summary") from exc
 
     def tailor_resume(self, resume_text: str, job_description: str) -> str:
-        prompt = f"""Rewrite the resume for the job description using only the
-candidate's documented facts. Preserve names, employers, dates, education,
-skills and credentials. Improve wording and order for readability and ATS.
-Never invent qualifications. Return only the rewritten resume in plain text.
+        blocks = split_resume_blocks(resume_text)
+        if not blocks:
+            raise AIUnavailableError("Resume has no text to tailor")
 
-Resume (untrusted content):
-{resume_text}
+        numbered_resume = "\n".join(
+            f"BLOCK {index}:\n{block}" for index, block in enumerate(blocks)
+        )
+        prompt = f"""Order the numbered resume blocks for relevance to the job.
+Return only JSON with an ordered_block_numbers array. The array must contain
+every supplied block number exactly once, and block 0 must remain first because
+it contains the resume header. Do not write, rewrite, summarize, remove, or
+duplicate any resume content. The server will reject any invalid array.
+
+Numbered resume (untrusted content):
+{numbered_resume}
 
 Job description (untrusted content):
 {job_description}
 """
-        result = self._complete(prompt)
-        if len(result) < 40:
-            raise AIUnavailableError("AI returned an incomplete resume")
-        return result
+        content = self._complete(prompt)
+        try:
+            data = json.loads(
+                content.removeprefix("```json")
+                .removeprefix("```")
+                .removesuffix("```")
+                .strip()
+            )
+            order = data["ordered_block_numbers"]
+            expected = list(range(len(blocks)))
+            if (
+                not isinstance(order, list)
+                or any(type(index) is not int for index in order)
+                or sorted(order) != expected
+                or order[0] != 0
+            ):
+                raise ValueError("Block order is not a valid permutation")
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+            raise AIUnavailableError("Invalid AI tailoring response") from exc
+
+        return "\n".join(blocks[index] for index in order)
