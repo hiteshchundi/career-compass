@@ -24,7 +24,7 @@ function App() {
 
         </div>
 
-        <FileUpload onSuccess={setAnalysis} />
+        <FileUpload onSuccess={setAnalysis} onReset={() => setAnalysis(null)} />
 
         <ResumeResult result={analysis} />
 

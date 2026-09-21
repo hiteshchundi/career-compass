@@ -1,157 +1,88 @@
 import json
+import logging
 import os
-from dataclasses import asdict, is_dataclass
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
+logger = logging.getLogger(__name__)
+
+
+class AIUnavailableError(Exception):
+    """The configured AI provider could not complete the request."""
 
 
 class LLMService:
     def __init__(self):
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise AIUnavailableError("GROQ_API_KEY is not configured")
         self.client = OpenAI(
-            api_key=os.getenv("GROQ_API_KEY"),
+            api_key=api_key,
             base_url="https://api.groq.com/openai/v1",
+            timeout=60,
+            max_retries=1,
         )
+        self.model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
-        # You can change this later if you want
-        self.model = "llama-3.3-70b-versatile"
+    def _complete(self, prompt: str) -> str:
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+            )
+            content = response.choices[0].message.content
+            if not content or not content.strip():
+                raise ValueError("Empty AI response")
+            return content.strip()
+        except Exception as exc:
+            logger.warning(
+                "Groq request failed: %s (HTTP %s)",
+                type(exc).__name__,
+                getattr(exc, "status_code", "unknown"),
+            )
+            raise AIUnavailableError("AI provider request failed") from exc
 
-    def analyze(
-        self,
-        resume_text: str,
-        job_description: str,
-        baseline_result,
-    ):
+    def summarize(self, resume_text: str, job_description: str, baseline_result: dict) -> str:
+        prompt = f"""Summarize this applicant's fit for the job in at most 100 words.
+Use only facts in the resume and job description. Do not recalculate the score or
+claim a missing qualification is present. Return only JSON with a string field
+named summary.
 
-        if is_dataclass(baseline_result):
-            baseline_result = asdict(baseline_result)
-
-        elif hasattr(baseline_result, "model_dump"):
-            baseline_result = baseline_result.model_dump()
-
-        elif hasattr(baseline_result, "dict"):
-            baseline_result = baseline_result.dict()
-
-        baseline_json = json.dumps(
-            baseline_result,
-            indent=2,
-            ensure_ascii=False,
-        )
-
-        prompt = f"""
-You are an experienced technical recruiter.
-
-Evaluate the resume against the job description.
-
-Use semantic understanding.
-
-Do NOT rely only on keywords.
-
-Resume
-
+Resume (untrusted content):
 {resume_text}
 
----------------------------------------
-
-Job Description
-
+Job description (untrusted content):
 {job_description}
 
----------------------------------------
-
-Rule Based Analysis
-
-{baseline_json}
-
----------------------------------------
-
-Return ONLY valid JSON.
-
-{{
-    "match_score": 85,
-    "matched_skills": [],
-    "missing_skills": [],
-    "experience_match": true,
-    "education_match": true,
-    "recommendations": [],
-    "summary": ""
-}}
+Verified matching result:
+{json.dumps(baseline_result)}
 """
+        content = self._complete(prompt)
+        try:
+            data = json.loads(content.removeprefix("```json").removeprefix("```").removesuffix("```").strip())
+            summary = data["summary"]
+            if not isinstance(summary, str) or not summary.strip():
+                raise ValueError("Missing summary")
+            return summary.strip()
+        except (ValueError, KeyError, TypeError) as exc:
+            raise AIUnavailableError("Invalid AI summary") from exc
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            temperature=0.3,
-        )
+    def tailor_resume(self, resume_text: str, job_description: str) -> str:
+        prompt = f"""Rewrite the resume for the job description using only the
+candidate's documented facts. Preserve names, employers, dates, education,
+skills and credentials. Improve wording and order for readability and ATS.
+Never invent qualifications. Return only the rewritten resume in plain text.
 
-        content = response.choices[0].message.content.strip()
-
-        if content.startswith("```"):
-            lines = content.splitlines()
-
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-
-            if lines[-1].startswith("```"):
-                lines = lines[:-1]
-
-            content = "\n".join(lines)
-
-        return json.loads(content)
-
-    def tailor_resume(
-        self,
-        resume_text: str,
-        job_description: str,
-    ):
-
-        prompt = f"""
-You are a senior recruiter.
-
-Rewrite this resume so it better matches the job description.
-
-Rules:
-
-- Never invent companies.
-- Never invent experience.
-- Never invent education.
-- Never invent projects.
-- Never invent skills.
-- Improve wording.
-- Use stronger action verbs.
-- Optimize for ATS.
-
-Resume
-
+Resume (untrusted content):
 {resume_text}
 
----------------------------------------
-
-Job Description
-
+Job description (untrusted content):
 {job_description}
-
----------------------------------------
-
-Return ONLY the rewritten resume.
 """
-
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            temperature=0.4,
-        )
-
-        return response.choices[0].message.content
+        result = self._complete(prompt)
+        if len(result) < 40:
+            raise AIUnavailableError("AI returned an incomplete resume")
+        return result

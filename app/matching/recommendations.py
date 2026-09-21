@@ -1,23 +1,23 @@
 def generate_recommendations(
     *,
     missing_skills: list[str],
-    experience_match: bool,
-    education_match: bool,
+    experience_match: bool | None,
+    education_match: bool | None,
 ) -> list[str]:
 
     recommendations = []
 
     for skill in missing_skills:
         recommendations.append(
-            f"Add evidence of '{skill}' through projects or work experience."
+            f"If you have used '{skill}', show specific evidence in your work or projects."
         )
 
-    if not experience_match:
+    if experience_match is False:
         recommendations.append(
-            "Highlight projects that demonstrate equivalent experience."
+            "Clarify your relevant dates and scope of work so your experience can be assessed."
         )
 
-    if not education_match:
+    if education_match is False:
         recommendations.append(
             "Verify that your education section clearly matches the job requirements."
         )

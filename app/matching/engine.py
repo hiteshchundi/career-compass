@@ -1,115 +1,75 @@
 import re
 
 from .recommendations import generate_recommendations
-from .score import calculate_match_score
 from .types import MatchResult
 
-def extract_years(value):
-    if value is None:
-        return 0
 
-    if isinstance(value, int):
-        return value
+DEGREE_RANK = {"associate": 1, "bachelor": 2, "master": 3, "doctorate": 4}
 
-    if isinstance(value, float):
-        return int(value)
 
+def years_of_experience(value) -> float:
+    if isinstance(value, (int, float)):
+        return max(0.0, float(value))
     if isinstance(value, list):
-        text = " ".join(str(v) for v in value)
-    else:
-        text = str(value)
+        return max((years_of_experience(item) for item in value), default=0.0)
+    if isinstance(value, dict):
+        return years_of_experience(value.get("duration"))
+    match = re.search(r"\b(\d{1,2}(?:\.\d+)?)\s*\+?\s*years?\b", str(value or ""), re.I)
+    return float(match.group(1)) if match else 0.0
 
-    match = re.search(r"\d+", text)
 
-    if match:
-        return int(match.group())
-
-    return 0
+def degree_rank(value) -> int:
+    if isinstance(value, list):
+        return max((degree_rank(item) for item in value), default=0)
+    if isinstance(value, dict):
+        return degree_rank(value.get("degree"))
+    return DEGREE_RANK.get(str(value or "").lower(), 0)
 
 
 class MatchingEngine:
-
-    def compare(
-        self,
-        resume: dict,
-        job: dict,
-    ) -> MatchResult:
-        
+    def compare(self, resume: dict, job: dict) -> MatchResult:
         if hasattr(resume, "model_dump"):
             resume = resume.model_dump()
-
         if hasattr(job, "model_dump"):
             job = job.model_dump()
 
-        resume_skills = set(
-            resume.get("skills", [])
-        )
+        resume_skills = set(resume.get("skills") or [])
+        required_skills = set(job.get("required_skills") or [])
+        matched = sorted(resume_skills & required_skills)
+        missing = sorted(required_skills - resume_skills)
 
-        required_skills = set(
-    job.get("required_skills", [])
-        )
+        required_years = years_of_experience(job.get("experience"))
+        resume_years = years_of_experience(resume.get("experience"))
+        required_degree = degree_rank(job.get("education"))
+        resume_degree = degree_rank(resume.get("education"))
+        experience_match = resume_years >= required_years if required_years else None
+        education_match = resume_degree >= required_degree if required_degree else None
+        alternative = bool(job.get("education_or_experience") and required_years and required_degree)
 
-        matched = sorted(
-            resume_skills & required_skills
-        )
-
-        missing = sorted(
-            required_skills - resume_skills
-        )
-
-        extra = sorted(
-            resume_skills - required_skills
-        )
-
-        resume_experience = resume.get("experience")
-        required_experience = job.get("experience")
-
-        resume_years = extract_years(resume_experience)
-        required_years = extract_years(required_experience)
-
-        experience_match = resume_years >= required_years
-
-        resume_education = resume.get(
-            "education",
-            [],
-        )
-
-        required_education = job.get(
-            "education",
-            [],
-        )
-
-        education_match = (
-            bool(
-                set(resume_education)
-                & set(required_education)
-            )
-            or not required_education
-        )
-
-        score = calculate_match_score(
-            resume_skills=resume_skills,
-            required_skills=required_skills,
-            resume_experience=resume_experience,
-            required_experience=required_experience,
-            resume_education=resume_education,
-            required_education=required_education,
-        )
-
-        recommendations = generate_recommendations(
-            missing_skills=missing,
-            experience_match=experience_match,
-            education_match=education_match,
-        )
+        weights = []
+        if required_skills:
+            weights.append((70, len(matched) / len(required_skills)))
+        if alternative:
+            weights.append((20, max(min(resume_years / required_years, 1), float(bool(education_match)))))
+        else:
+            if required_years:
+                weights.append((20, min(resume_years / required_years, 1)))
+            if required_degree:
+                weights.append((10, float(bool(education_match))))
+        score = round(100 * sum(weight * ratio for weight, ratio in weights) /
+                      sum(weight for weight, _ in weights), 2) if weights else 0.0
 
         return MatchResult(
             match_score=score,
             matched_skills=matched,
             missing_skills=missing,
-            extra_skills=extra,
+            extra_skills=sorted(resume_skills - required_skills),
             experience_match=experience_match,
             education_match=education_match,
-            recommendations=recommendations,
+            education_or_experience=alternative,
+            recommendations=generate_recommendations(
+                missing_skills=missing,
+                experience_match=experience_match if not alternative or not education_match else None,
+                education_match=education_match if not alternative or not experience_match else None,
+            ) if weights else ["The job description has no recognizable requirements to assess."],
         )
-
-    

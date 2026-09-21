@@ -1,4 +1,6 @@
 from pathlib import Path
+from dataclasses import asdict
+import logging
 import shutil
 import tempfile
 
@@ -6,12 +8,16 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.ingestion.docx import extract_text as extract_docx_text
 from app.ingestion.pdf import extract_text as extract_pdf_text
+from app.ingestion.docx import DOCXExtractionError
+from app.ingestion.pdf import PDFExtractionError
 
 from app.resume_analysis.parser import ResumeParser
 from app.job_analysis.parser import JobParser
 from app.matching.engine import MatchingEngine
 
-from app.ai.llm_service import LLMService
+from app.ai.llm_service import AIUnavailableError, LLMService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/analyze",
@@ -29,6 +35,9 @@ async def analyze(
             status_code=400,
             detail="Resume is required.",
         )
+
+    if not job_description.strip():
+        raise HTTPException(status_code=400, detail="Job description is required.")
 
     suffix = Path(resume.filename).suffix.lower()
 
@@ -49,10 +58,13 @@ async def analyze(
         # --------------------------------------------------
         # Extract Resume Text
         # --------------------------------------------------
-        if suffix == ".pdf":
-            resume_text = extract_pdf_text(temp_path)
-        else:
-            resume_text = extract_docx_text(temp_path)
+        try:
+            if suffix == ".pdf":
+                resume_text = extract_pdf_text(temp_path)
+            else:
+                resume_text = extract_docx_text(temp_path)
+        except (PDFExtractionError, DOCXExtractionError) as exc:
+            raise HTTPException(status_code=422, detail="Resume text could not be extracted.") from exc
 
         # --------------------------------------------------
         # Parse Resume
@@ -75,22 +87,19 @@ async def analyze(
         # --------------------------------------------------
         # AI Enhancement
         # --------------------------------------------------
+        result = asdict(baseline_result)
         try:
-            ai_result = LLMService().analyze(
+            result["summary"] = LLMService().summarize(
                 resume_text=resume_text,
                 job_description=job_description,
-                baseline_result=baseline_result,
+                baseline_result=result,
             )
-
-            return ai_result
-
-        except Exception as e:
-            print("\n========== LLM FAILED ==========")
-            print(e)
-            print("===================================\n")
-
-            # Fall back to deterministic analysis
-            return baseline_result
+            result["ai_status"] = "available"
+        except AIUnavailableError as exc:
+            logger.warning("AI summary unavailable: %s", exc)
+            result["summary"] = None
+            result["ai_status"] = "unavailable"
+        return result
 
     finally:
         temp_path.unlink(missing_ok=True)

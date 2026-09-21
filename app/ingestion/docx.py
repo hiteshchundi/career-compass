@@ -39,6 +39,16 @@ def extract_text(file_path: str | Path) -> str:
             if paragraph.text.strip()
         ]
 
+        # Many resume templates place qualifications in tables.
+        for table in document.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    paragraphs.extend(
+                        paragraph.text.strip()
+                        for paragraph in cell.paragraphs
+                        if paragraph.text.strip()
+                    )
+
         extracted_text = "\n".join(paragraphs).strip()
 
         if not extracted_text:

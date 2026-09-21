@@ -1,13 +1,15 @@
 import { useRef, useState } from "react";
 import { analyzeResume, tailorResume } from "../api/resume";
+import type { ResumeAnalysis } from "../types/resume";
 
 interface FileUploadProps {
-  onSuccess: (result: any) => void;
+  onSuccess: (result: ResumeAnalysis) => void;
+  onReset: () => void;
 }
 
 type StatusType = "success" | "error" | "info";
 
-export default function FileUpload({ onSuccess }: FileUploadProps) {
+export default function FileUpload({ onSuccess, onReset }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -46,7 +48,7 @@ export default function FileUpload({ onSuccess }: FileUploadProps) {
     } catch (e) {
       console.error(e);
 
-      setStatus("Analysis failed.");
+      setStatus(e instanceof Error ? e.message : "Analysis failed.");
       setStatusType("error");
     } finally {
       setLoading(false);
@@ -83,14 +85,14 @@ export default function FileUpload({ onSuccess }: FileUploadProps) {
 
       link.remove();
 
-      window.URL.revokeObjectURL(url);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
 
       setStatus("Tailored resume downloaded!");
       setStatusType("success");
     } catch (e) {
       console.error(e);
 
-      setStatus("Failed to generate tailored resume.");
+      setStatus(e instanceof Error ? e.message : "Failed to generate tailored resume.");
       setStatusType("error");
     } finally {
       setTailoring(false);
@@ -109,6 +111,7 @@ export default function FileUpload({ onSuccess }: FileUploadProps) {
         onChange={(e) => {
           if (e.target.files?.length) {
             setSelectedFile(e.target.files[0]);
+            onReset();
           }
         }}
       />
@@ -126,7 +129,10 @@ export default function FileUpload({ onSuccess }: FileUploadProps) {
         className="mt-8 h-64 w-full rounded-lg border p-4"
         placeholder="Paste the Job Description here..."
         value={jobDescription}
-        onChange={(e) => setJobDescription(e.target.value)}
+        onChange={(e) => {
+          setJobDescription(e.target.value);
+          onReset();
+        }}
       />
 
       <div className="mt-6 flex gap-4">
